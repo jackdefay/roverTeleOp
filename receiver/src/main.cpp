@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <RH_RF69.h>
 
-#define JOYSTICK_RANGE 1020
+#define JOYSTICK_RANGE 1023
 
 #define RF69_FREQ 900.0
 
@@ -98,29 +98,34 @@ void loop(){
         word = temp;
         i = 0;
         while(word.charAt(i) != '*'){
-          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') xcoord += word.charAt(i);
+          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') ycoord += word.charAt(i);
           i++;
         }
         i++;
         while(word.charAt(i) != '*'){
-          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') ycoord += word.charAt(i);
+          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') xcoord += word.charAt(i);
           i++;
         }
-        xcoordint = xcoord.toInt();
-        ycoordint = ycoord.toInt();
+        xcoordint = xcoord.toInt() - (JOYSTICK_RANGE/2);
+        ycoordint = (JOYSTICK_RANGE/2) - ycoord.toInt();
         Serial.print(xcoordint); Serial.print(", "); Serial.println(ycoordint);
 
         //set pwm levels for writing to motors!
-        pwmr = (int) 2*(ycoordint * 255 /JOYSTICK_RANGE) - (125.5);  //***just going to code it to do turns for now, will add rotation functionality later***
+        pwmr = (int) 2*(ycoordint * 255 /JOYSTICK_RANGE);  //***just going to code it to do turns for now, will add rotation functionality later***
         pwml = pwmr;
-        if(xcoordint>-10 && xcoordint<10 && ycoordint>-10 && ycoordint<10){
+        Serial.print("the forward power to the motors before correction is: "); Serial.println(pwmr);
+        if(xcoordint>-20 && xcoordint<20 && ycoordint>20 && ycoordint<20){
           pwmr=0;
           pwml=0;
         }
-        // else if(xcoordint > JOYSTICK_RANGE/2 && xcoordint>0) pwmr -= (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
-        // else if(xcoordint > JOYSTICK_RANGE/2 && xcoordint<0) pwmr += (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
-        // else if(xcoordint < JOYSTICK_RANGE/2 && xcoordint>0) pwml -= (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
-        // else if(xcoordint < JOYSTICK_RANGE/2 && xcoordint<0) pwml += (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
+        else if(xcoordint > JOYSTICK_RANGE/2){
+          pwmr -= (int) (2*(xcoordint * 255)/JOYSTICK_RANGE);
+          pwml += (int) (2*(xcoordint * 255)/JOYSTICK_RANGE);
+        }
+        else if(xcoordint < JOYSTICK_RANGE/2){
+          pwml -= (int) (-2*(xcoordint * 255)/JOYSTICK_RANGE);
+          pwmr += (int) (-2*(xcoordint * 255)/JOYSTICK_RANGE);
+        }
 
         setSpeed(pwmr, pwml);
         Serial.print(pwmr); Serial.print(", "); Serial.println(pwml);
@@ -178,7 +183,8 @@ void setSpeed(int pwmr, int pwml){
 }
 
 int clip(int num){
-  if(num>0 && num<255) return num;
-  else if(num>255) return 255;
+  if(num>=0 && num<=255) return num;
+  else if(num>=-255 && num<0) return -num;
+  else if(num>255 || num<-255) return 255;
   else return 0;
 }
