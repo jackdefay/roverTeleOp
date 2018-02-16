@@ -111,10 +111,16 @@ void loop(){
         Serial.print(xcoordint); Serial.print(", "); Serial.println(ycoordint);
 
         //set pwm levels for writing to motors!
-        pwmr = (int) ycoordint-(JOYSTICK_RANGE/2) * 255 /JOYSTICK_RANGE;  //***just going to code it to do turns for now, will add rotation functionality later***
+        pwmr = (int) 2*(ycoordint * 255 /JOYSTICK_RANGE) - (125.5);  //***just going to code it to do turns for now, will add rotation functionality later***
         pwml = pwmr;
-        if(xcoordint > JOYSTICK_RANGE/2) pwmr -= (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
-        else if(xcoordint < JOYSTICK_RANGE/2) pwml -= (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
+        if(xcoordint>-10 && xcoordint<10 && ycoordint>-10 && ycoordint<10){
+          pwmr=0;
+          pwml=0;
+        }
+        // else if(xcoordint > JOYSTICK_RANGE/2 && xcoordint>0) pwmr -= (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
+        // else if(xcoordint > JOYSTICK_RANGE/2 && xcoordint<0) pwmr += (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
+        // else if(xcoordint < JOYSTICK_RANGE/2 && xcoordint>0) pwml -= (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
+        // else if(xcoordint < JOYSTICK_RANGE/2 && xcoordint<0) pwml += (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
 
         setSpeed(pwmr, pwml);
         Serial.print(pwmr); Serial.print(", "); Serial.println(pwml);
@@ -162,6 +168,8 @@ void setSpeed(int pwmr, int pwml){
 
   pwmr = clip(pwmr);
   pwml = clip(pwml);
+
+  Serial.print("the values being written to the motors are: "); Serial.print(pwmr); Serial.print(", "); Serial.println(pwml);
 
   analogWrite(pwmrf, pwmr);
   analogWrite(pwmrb, pwmr);
