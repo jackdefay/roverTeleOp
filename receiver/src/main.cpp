@@ -4,8 +4,6 @@
 
 #define JOYSTICK_RANGE 1020
 
-#define PIN 5
-
 #define RF69_FREQ 900.0
 
   #define RFM69_CS      8
@@ -22,7 +20,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 #define lfpos 11
 #define lfneg 10
 #define lbpos 9
-#define lbneg 63
+#define lbneg 6
 
 #define pwmrf 13
 #define pwmrb 12
@@ -31,6 +29,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
 void setDirection(char motor, bool direction);
 void setSpeed(int pwmr, int pwml);
+int clip(int num);
 
 void setup() {
   Serial.begin(115200);
@@ -75,8 +74,8 @@ void setup() {
   pinMode(pwmlf, OUTPUT);
   pinMode(pwmlb, OUTPUT);
 
-  setDirection('r', 1);
-  setDirection('l', 1);
+  setDirection('r', true);
+  setDirection('l', true);
 
 }
 
@@ -84,8 +83,7 @@ void loop(){
   String word, xcoord, ycoord;
   char temp[20];
   int i = 0, xcoordint, ycoordint, pwmr = 0, pwml = 0;
- static unsigned long previousMillis = 0, currentMillis = 0;
-static int counter = 0;
+  static unsigned long previousMillis = 0, currentMillis = 0;
 
   if (rf69.available()) {
       uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
@@ -99,7 +97,6 @@ static int counter = 0;
         }
         word = temp;
         i = 0;
-        word = "500* 500*";
         while(word.charAt(i) != '*'){
           if(word.charAt(i) >= '0' && word.charAt(i) <= '9') xcoord += word.charAt(i);
           i++;
@@ -114,11 +111,10 @@ static int counter = 0;
         Serial.print(xcoordint); Serial.print(", "); Serial.println(ycoordint);
 
         //set pwm levels for writing to motors!
-        pwmr = (int) ycoordint * 255;  //***just going to code it to do turns for now, will add rotation functionality later***
-        pwmr /= (int) JOYSTICK_RANGE;
+        pwmr = (int) ycoordint-(JOYSTICK_RANGE/2) * 255 /JOYSTICK_RANGE;  //***just going to code it to do turns for now, will add rotation functionality later***
         pwml = pwmr;
-        if(xcoordint > JOYSTICK_RANGE/2) pwmr -= (int) (xcoordint * 255)/JOYSTICK_RANGE;
-        else if(xcoordint < JOYSTICK_RANGE/2) pwml -= (int) (xcoordint * 255)/JOYSTICK_RANGE;
+        if(xcoordint > JOYSTICK_RANGE/2) pwmr -= (int) ((xcoordint * 255)/JOYSTICK_RANGE - 125.5);
+        else if(xcoordint < JOYSTICK_RANGE/2) pwml -= (int) (125.5 - (xcoordint * 255)/JOYSTICK_RANGE);
 
         setSpeed(pwmr, pwml);
         Serial.print(pwmr); Serial.print(", "); Serial.println(pwml);
@@ -139,7 +135,6 @@ static int counter = 0;
    currentMillis = millis();
    if(currentMillis - previousMillis > 100) setSpeed(0, 0);
    delay(100);
-   Serial.println(counter);
 }
 
 void setDirection(char motor, bool direction){  //1 = forwards, 0 = backwards
@@ -159,8 +154,23 @@ void setDirection(char motor, bool direction){  //1 = forwards, 0 = backwards
 }
 
 void setSpeed(int pwmr, int pwml){
+  if(pwmr>=0) setDirection('r', true);
+  else setDirection('r', false);
+
+  if(pwml>=0) setDirection('l', true);
+  else setDirection('l', false);
+
+  pwmr = clip(pwmr);
+  pwml = clip(pwml);
+
   analogWrite(pwmrf, pwmr);
   analogWrite(pwmrb, pwmr);
   analogWrite(pwmlf, pwml);
   analogWrite(pwmlb, pwml);
+}
+
+int clip(int num){
+  if(num>0 && num<255) return num;
+  else if(num>255) return 255;
+  else return 0;
 }
