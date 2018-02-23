@@ -66,7 +66,6 @@ void setup() {
   digitalWrite(13, LOW);
 }
 
-//int last_x = 0, last_y = 0;
 void loop() {
   char radiopacket[20];
   char temp[5];
@@ -74,65 +73,17 @@ void loop() {
   int x = ss.analogRead(2);
   int y = ss.analogRead(3);
 
-  //if ( (abs(x - last_x) > 3)  ||  (abs(y - last_y) > 3)) {
       Serial.print(x); Serial.print(", "); Serial.println(y);
-      //last_x = x;
-      //last_y = y;
       itoa((int) x, temp, 10);
       tempWord = temp;
       tempWord += "* ";
-      /*for(int j = 0; j<5; j++){
-        radiopacket[j] = temp[j];
-      }*/
       itoa((int) y, temp, 10);
       tempWord += temp;
       tempWord += "* ";
       tempWord.toCharArray(radiopacket, 20);
-      /*for(int j = 0; j<5; j++){
-        radiopacket[j+6] = temp[j];
-      }*/
       Serial.println(radiopacket);
-      //itoa((int) y, radiopacket, 6);
       rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
       rf69.waitPacketSent();
-  //}
-
-  /*if(!digitalRead(IRQ_PIN)){
-    uint32_t buttons = ss.digitalReadBulk(button_mask);
-    //Serial.println(buttons, BIN);
-    if (! (buttons & (1 << BUTTON_RIGHT))) {
-      Serial.println("A");
-      //itoa((int) 1, radiopacket, 9);
-    }
-    //else itoa((int) 0, radiopacket, 9);
-    if (! (buttons & (1 << BUTTON_DOWN))) {
-      Serial.println("B");
-      //itoa((int) 1, radiopacket, 11);
-    }
-    //else itoa((int) 0, radiopacket, 11);
-    if (! (buttons & (1 << BUTTON_LEFT))) {
-      Serial.println("Y");
-      //itoa((int) 1, radiopacket, 13);
-    }
-    //else itoa((int) 0, radiopacket, 13);
-    if (! (buttons & (1 << BUTTON_UP))) {
-      Serial.println("X");
-      //itoa((int) 1, radiopacket, 15);
-    }
-    //else itoa((int) 0, radiopacket, 15);
-    if (! (buttons & (1 << BUTTON_SEL))) {
-      Serial.println("Select");
-      //itoa((int) 1, radiopacket, 17);
-    }
-    //else itoa((int) 0, radiopacket, 17);
-  }
-  else{
-    itoa((int) 0, radiopacket, 9);
-    itoa((int) 0, radiopacket, 11);
-    itoa((int) 0, radiopacket, 13);
-    itoa((int) 0, radiopacket, 15);
-    itoa((int) 0, radiopacket, 17);
-  }*/
 
   delay(10);
 }
