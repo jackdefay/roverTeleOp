@@ -23,22 +23,24 @@ uint32_t button_mask = (1 << BUTTON_RIGHT) | (1 << BUTTON_DOWN) | (1 << BUTTON_L
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
+void sendJoystickData(int x, int y);
+
 void setup() {
   Serial.begin(115200);
 
-//controller setup
+  //controller setup
   ss.begin(0x49);
 
   ss.pinModeBulk(button_mask, INPUT_PULLUP);
   ss.setGPIOInterrupts(button_mask, 1);
   pinMode(IRQ_PIN, INPUT);
 
-//radio setup
+  //radio setup
   pinMode(LED, OUTPUT);
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
-    // manual reset
+  // manual reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
@@ -59,7 +61,7 @@ void setup() {
 
   pinMode(LED, OUTPUT);
 
-//blink led on startup
+  //blink led on startup
   delay(1000);
   digitalWrite(13, HIGH);
   delay(500);
@@ -67,23 +69,29 @@ void setup() {
 }
 
 void loop() {
-  char radiopacket[20];
-  char temp[5];
-  String tempWord = "####";
+
   int x = ss.analogRead(2);
   int y = ss.analogRead(3);
 
-      Serial.print(x); Serial.print(", "); Serial.println(y);
-      itoa((int) x, temp, 10);
-      tempWord = temp;
-      tempWord += "* ";
-      itoa((int) y, temp, 10);
-      tempWord += temp;
-      tempWord += "* ";
-      tempWord.toCharArray(radiopacket, 20);
-      Serial.println(radiopacket);
-      rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
-      rf69.waitPacketSent();
+  sendJoystickData(x, y);
 
   delay(10);
+}
+
+void sendJoystickData(int x, int y){
+  char radiopacket[20];
+  char temp[5];
+  String tempWord = "####";
+
+  Serial.print(x); Serial.print(", "); Serial.println(y);
+  itoa((int) x, temp, 10);
+  tempWord = temp;
+  tempWord += "* ";
+  itoa((int) y, temp, 10);
+  tempWord += temp;
+  tempWord += "* ";
+  tempWord.toCharArray(radiopacket, 20);
+  Serial.println(radiopacket);
+  rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
+  rf69.waitPacketSent();
 }
