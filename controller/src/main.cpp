@@ -112,15 +112,15 @@ void convertJoystickData(int coords[]){
   coords[0] = (int) 2*(newy * 255 /JOYSTICK_RANGE);
   coords[1] = coords[0];
 
-  if(newx>-20 && newx<20 && newy>20 && newy<20){
-    coords[0] = 0;
-    coords[1] = 0;
-  }
-  else if(newx > JOYSTICK_RANGE/2){
+  // if(newx>-20 && newx<20 && newy>20 && newy<20){
+  //   coords[0] = 0;
+  //   coords[1] = 0;
+  // }
+  if(newx > (JOYSTICK_RANGE/2)){
     coords[0] -= (int) (2*(newx * 255)/JOYSTICK_RANGE);
     coords[1] += (int) (2*(newx * 255)/JOYSTICK_RANGE);
   }
-  else if(newx < JOYSTICK_RANGE/2){
+  else if(newx < (JOYSTICK_RANGE/2)){
     coords[1] -= (int) (-2*(newx * 255)/JOYSTICK_RANGE);
     coords[0] += (int) (-2*(newx * 255)/JOYSTICK_RANGE);
   }

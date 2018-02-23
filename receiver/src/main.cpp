@@ -82,7 +82,7 @@ void setup() {
 void loop(){
   String word, xcoord, ycoord;
   char temp[20];
-  int i = 0, xcoordint, ycoordint, pwmr = 0, pwml = 0;
+  int i = 0, xcoordint, ycoordint;//, pwmr = 0, pwml = 0;
   static unsigned long previousMillis = 0, currentMillis = 0;
 
   if (rf69.available()) {
@@ -98,12 +98,12 @@ void loop(){
         word = temp;
         i = 0;
         while(word.charAt(i) != '*'){
-          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') xcoord += word.charAt(i);
+          if((word.charAt(i) >= '0' && word.charAt(i) <= '9') || word.charAt(i) == '-') xcoord += word.charAt(i);
           i++;
         }
         i++;
         while(word.charAt(i) != '*'){
-          if(word.charAt(i) >= '0' && word.charAt(i) <= '9') ycoord += word.charAt(i);
+          if((word.charAt(i) >= '0' && word.charAt(i) <= '9') || word.charAt(i) == '-') ycoord += word.charAt(i);
           i++;
         }
         // xcoordint = ycoord.toInt() - (JOYSTICK_RANGE/2);
@@ -126,11 +126,13 @@ void loop(){
         //   pwml -= (int) (-2*(xcoordint * 255)/JOYSTICK_RANGE);
         //   pwmr += (int) (-2*(xcoordint * 255)/JOYSTICK_RANGE);
         // }
-        xcoordint = xcoord.toInt();
-        ycoordint = ycoord.toInt();
+        xcoordint = (int) xcoord.toInt();
+        ycoordint = (int) ycoord.toInt();
+
+        Serial.print(xcoordint); Serial.print(", "); Serial.println(ycoordint);
 
         setSpeed(xcoordint, ycoordint);
-        Serial.print(pwmr); Serial.print(", "); Serial.println(pwml);
+
         previousMillis = millis();
 
         digitalWrite(13, HIGH);
@@ -147,11 +149,11 @@ void loop(){
 
    currentMillis = millis();
    if(currentMillis - previousMillis > 100) setSpeed(0, 0);
-   delay(100);
+   delay(100);                                                  //change this after done testing
 }
 
 void setDirection(char motor, bool direction){  //1 = forwards, 0 = backwards
-  Serial.println("In function setDirection");
+  Serial.print("setting direction to "); Serial.println(direction);
   if(motor == 'r'){
     digitalWrite(rfpos, (int) direction);
     digitalWrite(rfneg, (int) !direction);
@@ -185,6 +187,7 @@ void setSpeed(int pwmr, int pwml){
 }
 
 int clip(int num){
+  if(num>=-100 && num<=100) return 0;
   if(num>=0 && num<=255) return num;
   else if(num>=-255 && num<0) return -num;
   else if(num>255 || num<-255) return 255;
