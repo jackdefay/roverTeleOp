@@ -2,11 +2,13 @@
 #include <Adafruit_seesaw.h>
 #include <SPI.h>
 #include <RH_RF69.h>
+#include "Adafruit_DRV2605.h"
 
 #define JOYSTICK_RANGE 1023
 
 //defs for controller
 Adafruit_seesaw ss;
+Adafruit_DRV2605 drv;
 #define BUTTON_RIGHT 6
 #define BUTTON_DOWN  7
 #define BUTTON_LEFT  9
@@ -27,6 +29,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
 void sendJoystickData(int x, int y);
 void convertJoystickData(int coords[]);
+void setHapticPower(int level);
 
 void setup() {
   Serial.begin(115200);
@@ -64,6 +67,12 @@ void setup() {
 
   pinMode(LED, OUTPUT);
 
+  //haptic motor driver setup
+  drv.begin();
+  drv.selectLibrary(1);
+
+  drv.setMode(DRV2605_MODE_INTTRIG);
+
   //blink led on startup
   delay(1000);
   digitalWrite(13, HIGH);
@@ -75,14 +84,24 @@ void loop() {
   static int coords[2];
   coords[0] = ss.analogRead(2);
   coords[1] = ss.analogRead(3);
+  static int level = 0;
+  static unsigned long currentMillis, previousMillis;
 
   convertJoystickData(coords);
-
   //Serial.print(coords[0]); Serial.print(", "); Serial.println(coords[1]);
-
   sendJoystickData(coords[0], coords[1]);
+  setHapticPower(level);
 
-  delay(10);
+  currentMillis = millis();
+
+  if(currentMillis-previousMillis >= (unsigned long) 1000){
+    previousMillis = currentMillis;
+    level++;
+  }
+
+  if(level > 5) level = 0;
+
+  //delay(10);
 }
 
 void sendJoystickData(int x, int y){
@@ -126,4 +145,26 @@ void convertJoystickData(int coords[]){
   }
 
   //coords[0] = pwmr, coords[1] = pwml
+}
+
+void setHapticPower(int level){
+  int effect = 0;
+
+  if(level == 0)
+   effect = 0;
+ else if(level == 1)
+   effect = 51;
+ else if (level == 2)
+   effect = 50;
+ else if (level == 3)
+   effect = 49;
+ else if (level == 4)
+   effect = 48;
+ else if (level == 5)
+   effect = 47;
+
+ drv.setWaveform(0, effect);  // play effect
+ drv.setWaveform(1, 0);       // end waveform
+   // plays
+ drv.go();
 }
