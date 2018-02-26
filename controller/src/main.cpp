@@ -84,24 +84,37 @@ void loop() {
   static int coords[2];
   coords[0] = ss.analogRead(2);
   coords[1] = ss.analogRead(3);
-  static int level = 0;
-  static unsigned long currentMillis, previousMillis;
+  int i, level;
+  String word, stringLevel;
+  char temp[20];
+  // static unsigned long currentMillis, previousMillis;
 
   convertJoystickData(coords);
   //Serial.print(coords[0]); Serial.print(", "); Serial.println(coords[1]);
   sendJoystickData(coords[0], coords[1]);
-  setHapticPower(level);
 
-  currentMillis = millis();
+  //listens for haptic data
+  if (rf69.available()) {
+      uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+      uint8_t len = sizeof(buf);
+      if (rf69.recv(buf, &len)) {
+          if (!len) return;
+          buf[len] = 0;
+          Serial.println((char*)buf);
+          for(int i = 0; i<20; i++){
+              temp[i] = (char) buf[i];
+          }
+          word = temp;
+          i = 0;
+          while(word.charAt(i) != '*'){
+              if((word.charAt(i) >= '0' && word.charAt(i) <= '9') || word.charAt(i) == '-') stringLevel += word.charAt(i);
+              i++;
+          }
 
-  if(currentMillis-previousMillis >= (unsigned long) 1000){
-    previousMillis = currentMillis;
-    level++;
+          level = (int) stringLevel.toInt();
+          setHapticPower(level);  //sets the haptic motor to the received power level
+      }
   }
-
-  if(level > 5) level = 0;
-
-  //delay(10);
 }
 
 void sendJoystickData(int x, int y){
