@@ -35,7 +35,7 @@ void setup() {
   Serial.begin(115200);
 
   //controller setup
-  ss.begin(0x49);
+  ss.begin(0x4A);
 
   ss.pinModeBulk(button_mask, INPUT_PULLUP);
   ss.setGPIOInterrupts(button_mask, 1);
